@@ -1,2 +1,6 @@
 # weather_node
-Responsive Website to show OpenWeather API usage
+Python Flask-Leaflet application with Websocket, Multithreading and Database that fetches data from OpenWeatherMaps API
+
+![Demo](demo.png)
+
+Download Thread fetches 5days 3 hour weather forecast corresponding to a list of given zip codes. The forecast data is saved into MongoDB collection, and is fetched by another thread which refreshes the map layers, and passes the updated marker information to client via websockets. The client receives async data and renders the data as Leaflet objects to show the map with layers and markers.
