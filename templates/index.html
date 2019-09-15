@@ -1,1 +1,166 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Open Weather Map Demo</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 
+        <script>
+            L_NO_TOUCH = false;
+            L_DISABLE_3D = false;
+        </script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.5.1/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://rawcdn.githack.com/python-visualization/folium/master/folium/templates/leaflet.awesome.rotate.css"/>
+    <style>html, body {width: 100%;height: 100%;margin: 0;padding: 0;}</style>
+    <style>#map {position:absolute;top:0;bottom:0;right:0;left:0;}</style>
+
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+            </style>
+
+    <script src="//code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.5.1/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+
+</head>
+<body>
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title text-center">Open Weather Map Demo</h3>
+            <hr width=100% align=left>
+            <p><b><u>Description:</u></b> Every 30 secs, map gets updated with latest forecast information from Open Weather Maps.  Uses Eventlet Websockets, Multithreading, NOSQL Database</p>
+            <p><b><u>Libraries & Technology used:</u></b>
+                <a href="https://flask-socketio.readthedocs.io/en/latest/" class="card-link">Flask_socketIO</a>,
+                <a href="https://palletsprojects.com/p/flask/" class="card-link">Flask</a>,
+                <a href="https://leafletjs.com/" class="card-link">Leaflet</a>,
+                <a href="https://api.jquery.com/jquery.ajax/" class="card-link">AJAX</a>,
+                <a href="https://getbootstrap.com/" class="card-link">Bootstrap</a>,
+                <a href="https://www.python.org/" class="card-link">Python</a>,
+                <a href="https://www.mongodb.com/" class="card-link">MongoDB</a>,
+                <a href="https://openweathermap.org/" class="card-link">OWM data</a></p>
+        </div>
+    </div>
+
+    <div class="map" id="map" ></div>
+    <script type="text/javascript">
+
+            var map = L.map(
+                "map",
+                {
+                    center: [40.0, -100.0],
+                    crs: L.CRS.EPSG3857,
+                    zoom: 4,
+                    zoomControl: true,
+                    preferCanvas: false,
+                }
+            );
+
+
+            var osm_tile = L.tileLayer(
+                "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {"attribution": "Data by \u0026copy; \u003ca href=\"http://openstreetmap.org\"\u003eOpenStreetMap\u003c/a\u003e, under \u003ca href=\"http://www.openstreetmap.org/copyright\"\u003eODbL\u003c/a\u003e.", "detectRetina": false, "maxNativeZoom": 18, "maxZoom": 18, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
+            ).addTo(map);
+
+
+            var temp_tile = L.tileLayer(
+                "http://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=249978898a3890977176a1ef532eabe8",
+                {"attribution": "Open Weather Maps", "detectRetina": false, "maxNativeZoom": 18, "maxZoom": 18, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
+            ).addTo(map);
+
+
+            var prec_tile = L.tileLayer(
+                "http://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=249978898a3890977176a1ef532eabe8",
+                {"attribution": "Open Weather Maps", "detectRetina": false, "maxNativeZoom": 18, "maxZoom": 18, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
+            ).addTo(map);
+
+
+            var cloud_tile = L.tileLayer(
+                "http://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=249978898a3890977176a1ef532eabe8",
+                {"attribution": "Open Weather Maps", "detectRetina": false, "maxNativeZoom": 18, "maxZoom": 18, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
+            ).addTo(map);
+
+
+            var press_tile = L.tileLayer(
+                "http://tile.openweathermap.org/map/pressure_new/{z}/{x}/{y}.png?appid=249978898a3890977176a1ef532eabe8",
+                {"attribution": "Open Weather Maps", "detectRetina": false, "maxNativeZoom": 18, "maxZoom": 18, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
+            ).addTo(map);
+
+
+            var wind_tile = L.tileLayer(
+                "http://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=249978898a3890977176a1ef532eabe8",
+                {"attribution": "Open Weather Maps", "detectRetina": false, "maxNativeZoom": 18, "maxZoom": 18, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
+            ).addTo(map);
+
+
+            var layer_control = {
+                base_layers : {
+                    "Temperature" : temp_tile,
+                    "Precipitation" : prec_tile,
+                    "Clouds" : cloud_tile,
+                    "Pressure" : press_tile,
+                    "Wind" : wind_tile,
+                },
+                overlays :  {
+                },
+            };
+            L.control.layers(
+                layer_control.base_layers,
+                layer_control.overlays,
+                {"autoZIndex": true, "collapsed": true, "position": "topright"}
+            ).addTo(map);
+            prec_tile.remove();
+            cloud_tile.remove();
+            press_tile.remove();
+            wind_tile.remove();
+
+
+            $(document).ready(function() {
+
+                namespace = '/test';
+                var socket = io(namespace);
+
+                socket.on('refresh_tiles', function(msg, cb) {
+                    map._resetView(map.getCenter(), map.getZoom(), true);
+                    if (cb)
+                        cb();
+                });
+
+                socket.on('add_marker', function(msg, cb) {
+                    var m = msg.data
+                    console.log(msg.data)
+                    var lat = m.coord[0], lon = m.coord[1];
+                    var name = m.name + ', ' + m.country;
+                    delete m.name;
+                    delete m.country;
+                    delete m.coord;
+                    console.log(name)
+                    console.log(lat)
+                    console.log(m)
+                    var marker = L.marker([lat, lon], {
+                                          title: name
+                                  }).addTo(map);
+
+                    marker.bindPopup(name + JSON.stringify(m));
+                    if (cb)
+                        cb();
+                });
+            });
+
+    </script>
+</body>
+</html>
